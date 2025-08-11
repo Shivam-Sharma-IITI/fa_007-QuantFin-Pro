@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Portfolio Dashboard Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- External Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Third-party Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.1.min.js"></script>
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+    
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+</head>
+<body>
+     <div id="particles-container"></div>
+<canvas id="background-canvas"></canvas>
+    <!-- Authentication Container -->
+    <div id="auth-container">
+        <div class="auth-form-wrapper">
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <h2 class="auth-title">Welcome Back</h2>
+                <p class="auth-subtitle">Login to access your dashboard</p>
+                <div id="login-error-message" class="hidden"></div>
+                <div class="form-group">
+                    <input type="email" id="login-email" class="form-control" placeholder="Email Address" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="login-password" class="form-control" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn btn--primary btn--full-width">Login</button>
+                <p class="auth-toggle-link">
+                    Don't have an account? <a id="show-signup">Sign Up</a>
+                </p>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signup-form" class="auth-form hidden">
+                <h2 class="auth-title">Create Account</h2>
+                <p class="auth-subtitle">Get started with your new dashboard</p>
+                <div id="signup-error-message" class="hidden"></div>
+                <div class="form-group">
+                    <input type="email" id="signup-email" class="form-control" placeholder="Email Address" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="signup-password" class="form-control" placeholder="Password (min. 6 characters)" required>
+                </div>
+                <button type="submit" class="btn btn--primary btn--full-width">Create Account</button>
+                <p class="auth-toggle-link">
+                    Already have an account? <a id="show-login">Login</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application Container (Initially Hidden) -->
+    <div id="app-container" class="hidden">
+        <div id="loadingScreen" class="loading-screen">
+            <div class="loading-spinner"></div>
+            <div>Loading your portfolio...</div>
+        </div>
+
+        <header class="header">
+            <div class="header__content">
+                <button id="hamburgerBtn" class="hamburger" aria-label="Menu">
+                    <span class="hamburger__line"></span>
+                    <span class="hamburger__line"></span>
+                    <span class="hamburger__line"></span>
+                </button>
+                <div class="header__center">
+            <div class="header__brand">QuantFin Pro</div>
+        </div>
+            <div class="header__right">
+    <div class="profile-dropdown-container">
+        <details class="profile-dropdown">
+            <summary class="profile-avatar-summary">
+                <div class="profile-avatar" title="Profile">👤</div>
+            </summary>
+            
+            <div id="user-info" class="profile-menu hidden">
+                <div class="profile-menu__header">
+                    <span id="user-email"></span>
+                </div>
+                <button id="logout-btn" class="btn-logout">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </details>
+    </div>
+    
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-toggle__sun">☀️</span>
+        <span class="theme-toggle__moon">🌙</span>
+    </button>
+</div>
+        </div>
+    </header>
+
+    <nav id="sidebar" class="sidebar">
+        <div class="sidebar__nav">
+            <a href="#" class="nav-item active" data-section="dashboard"><span class="nav-icon">🏠</span><span class="nav-text">Dashboard</span></a>
+            <a href="#" class="nav-item" data-section="trading"><span class="nav-icon">💹</span><span class="nav-text">Trading</span></a>
+            <a href="#" class="nav-item" data-section="analytics"><span class="nav-icon">📊</span><span class="nav-text">Analytics</span></a>
+            <a href="#" class="nav-item" data-section="news"><span class="nav-icon">📰</span><span class="nav-text">News</span></a>
+            <a href="#" class="nav-item" data-section="learn"><span class="nav-icon">📖</span><span class="nav-text">learn</span></a>
+             <a href="#" class="nav-item" data-section="team"><span class="nav-icon">👥</span><span class="nav-text">Team</span></a>
+        </div>
+    </nav>
+
+    <main id="mainContent" class="main-content">
+        <section id="dashboard" class="section active">
+            <h2 class="section-header">Welcome back!</h2>
+            <div class="market-ticker card glass-card">
+                    <div id="marketTicker" class="ticker-content"></div>
+                </div>
+            <div class="dashboard-grid">
+                <div class="card glass-card" id="portfolio-3d-card">
+    <div class="card__body">
+  </div>
+                  <div class="card" id="portfolio-card">
+    <div class="card__header">
+      <h3 class="card__title">Portfolio Overview</h3>
+      <span class="status-indicator online"></span>
+    </div>
+    <div class="card__body">
+      <div class="metric-title">Total Value</div>
+      <div class="metric-value">$124,530.45</div>
+      <div class="metric-change positive">+$2,340.20 (1.9%) today</div>
+      
+      <div class="portfolio-overview">
+        <div class="portfolio-item">
+          <div class="metric-title">Stocks</div>
+          <div class="metric-value" style="font-size: 1.5rem;">$89,245</div>
+        </div>
+        <div class="portfolio-item">
+          <div class="metric-title">Bonds</div>
+          <div class="metric-value" style="font-size: 1.5rem;">$25,120</div>
+        </div>
+        <div class="portfolio-item">
+          <div class="metric-title">Crypto</div>
+          <div class="metric-value" style="font-size: 1.5rem;">$8,965</div>
+        </div>
+        <div class="portfolio-item">
+          <div class="metric-title">Cash</div>
+          <div class="metric-value" style="font-size: 1.5rem;">$1,200</div>
+        </div>
+
+                <div class="card glass-card stock-chart-card">
+                    <div class="stock-chart-header">
+                        <h3>Live Stock Chart</h3>
+                        <div class="stock-chart-controls">
+                            <select id="stockSymbolSelect">
+                                <option value="AAPL">Apple (AAPL)</option>
+                                <option value="GOOGL">Google (GOOGL)</option>
+                                <option value="MSFT">Microsoft (MSFT)</option>
+                                <option value="TSLA">Tesla (TSLA)</option>
+                                <option value="AMZN">Amazon (AMZN)</option>
+                                <option value="NVDA">NVIDIA (NVDA)</option>
+                            </select>
+                            <button id="refreshStockBtn">Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="chart-price-info">
+                        <span class="current-price" id="stockCurrentPrice">$0.00</span>
+                        <span class="price-change" id="stockPriceChange">+$0.00 (+0.00%)</span>
+                    </div>
+
+                    <div id="stockChartContainer"></div>
+
+                    <div class="chart-timeframe-controls">
+                        <button class="timeframe-btn active" data-timeframe="1D">1D</button>
+                        <button class="timeframe-btn" data-timeframe="5D">5D</button>
+                        <button class="timeframe-btn" data-timeframe="1M">1M</button>
+                        <button class="timeframe-btn" data-timeframe="3M">3M</button>
+                        <button class="timeframe-btn" data-timeframe="1Y">1Y</button>
+                    </div>
+
+                    <div class="stock-chart-loading" id="stockChartLoading">Loading chart data...</div>
+                </div>
+
+                
+
+                <div class="market-ticker card glass-card">
+                    <div id="marketTicker" class="ticker-content"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="trading" class="section">
+            <h2 class="section-header">Live market data and trading interface</h2>
+            <div class="trading-grid">
+                <!-- Existing Market Watchlist -->
+                <div class="card glass-card">
+                    <h3>Market Watchlist</h3>
+                    <div id="watchlist" class="watchlist"></div>
+                </div>
+        
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+  {
+    "width"; 900,
+    "height"; 600,
+    "exchanges"; [],
+    "dataSource"; "S&P500",
+    "grouping"; "sector",
+    "blockSize"; "market_cap_basic",
+    "blockColor"; "change",
+    "locale"; "en",
+    "colorTheme"; "light",
+    "hasTopBar"; false,
+    "isZoomEnabled"; true
+  }
+  </script>
+</div>
+
+        
+                <!-- UPDATED: Mock Trading -->
+                <div class="card glass-card" id="mock-trading-card">
+                    <h3>Mock Trade</h3>
+                    <form id="trading-form" class="trading-form">
+                        <div class="form-group">
+                            <label for="trade-symbol">Select Stock</label>
+                            <select id="trade-symbol" class="form-control"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="trade-quantity">Quantity</label>
+                            <input type="number" id="trade-quantity" class="form-control" placeholder="0" min="1">
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" id="buy-btn" class="btn btn--primary">Buy</button>
+                            <button type="button" id="sell-btn" class="btn btn--secondary">Sell</button>
+                        </div>
+                        <div id="trade-message" class="trade-message"></div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="analytics" class="section">
+            <h2 class="section-header">AI-powered market analysis and insights</h2>
+            <div class="analytics-grid">
+                <div class="card glass-card">
+                    <h3 class="SentimentHeading">AI Market Sentiment</h3>
+                    <form id="sentimentForm" style="margin-bottom:16px; display: flex; gap:8px;">
+                        <input type="text" id="sentimentTicker" placeholder="Enter stock ticker (e.g., TSLA)" class="form-control" required="" style="max-width:240px;" autocomplete="off">
+                        <button type="submit" class="btn btn--primary">Analyze</button>
+                    </form>
+                    <div id="sentimentResult" style="min-height:60px;"></div>
+                </div>
+
+                <div class="card glass-card">
+                    <h3>Stock Forecasting</h3>
+                    <form id="forecastForm" style="margin-bottom:12px;display:flex; gap:8px; flex-wrap:wrap;">
+                        <input type="text" id="forecastSymbol" class="form-control" style="max-width:140px;" placeholder="Ticker (e.g. TSLA)" required="">
+                        <input type="number" id="forecastDays" class="form-control" style="max-width:75px;" min="1" max="90" placeholder="Days" required="">
+                        <select id="forecastCurrency" class="form-control" style="max-width:90px;">
+                            <option value="USD">USD</option>
+                            <option value="INR">INR</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                        <button type="submit" class="btn btn--primary">Forecast</button>
+                    </form>
+                    <div id="forecastResult" style="margin-top:8px;"></div>
+                    <div id="forecastChart" style="height:220px; margin-top:12px; margin-left:auto; margin-right:auto; display:block;"></div>
+
+                </div>
+                
+               
+            
+        </section>
+
+        <section id="team" class="section">
+            <h2 class="section-header">Meet the experts behind your portfolio</h2>
+            <div id="teamGrid" class="team-grid"></div>
+        </section>
+
+        <section id="news" class="section">
+            <h2 class="section-header">Stay updated with the latest market developments</h2>
+            <div id="newsFeed" class="news-feed"></div>
+        </section>
+        <section id="learn" class="section">
+    <h2 class="section-header">Learn</h2>
+    <div class="learn-content" style="text-align: center;">
+    <p>Master the art of investing with our curated learning modules. Click on any module to access expert tutorials and guides.</p>
+</div>
+
+        <div class="learning-modules">
+            <div class="module-grid">
+                <!-- Module 1: Stock Market Basics -->
+                <div class="learning-module" onclick="window.open('https://www.youtube.com/watch?v=p7HKvqRI_Bo', '_blank')">
+                    <div class="module-icon">📈</div>
+                    <h3>Stock Market Basics</h3>
+                    <p>Learn fundamental concepts of stock market investing, including how stocks work, market terminology, and basic investment principles.</p>
+                    <span class="module-badge">Beginner</span>
+                </div>
+
+                <!-- Module 2: Technical Analysis -->
+                <div class="learning-module" onclick="window.open('https://www.youtube.com/watch?v=08c4jGyPLeg', '_blank')">
+                    <div class="module-icon">📊</div>
+                    <h3>Technical Analysis</h3>
+                    <p>Master chart patterns, indicators, and technical analysis tools to make informed trading decisions.</p>
+                    <span class="module-badge">Intermediate</span>
+                </div>
+
+                <!-- Module 3: Fundamental Analysis -->
+                <div class="learning-module" onclick="window.open('https://www.youtube.com/watch?v=7KLnXjqiL5k', '_blank')">
+                    <div class="module-icon">🔍</div>
+                    <h3>Fundamental Analysis</h3>
+                    <p>Understand how to evaluate companies using financial statements, ratios, and economic indicators.</p>
+                    <span class="module-badge">Intermediate</span>
+                </div>
+
+                <!-- Module 4: Portfolio Management -->
+                <div class="learning-module" onclick="window.open('https://www.youtube.com/watch?v=uSKKnRNRu2c', '_blank')">
+                    <div class="module-icon">💼</div>
+                    <h3>Portfolio Management</h3>
+                    <p>Learn diversification strategies, risk management, and how to build a balanced investment portfolio.</p>
+                    <span class="module-badge">Advanced</span>
+                </div>
+
+                <!-- Module 5: Options Trading -->
+                <div class="learning-module" onclick="window.open('https://www.youtube.com/watch?v=7PM4rNDr4oI', '_blank')">
+                    <div class="module-icon">⚡</div>
+                    <h3>Options Trading</h3>
+                    <p>Explore advanced trading strategies using options, including calls, puts, and complex option strategies.</p>
+                    <span class="module-badge">Advanced</span>
+                </div>
+
+                <!-- Module 6: Value Investing -->
+                <div class="learning-module" onclick="window.open('https://www.youtube.com/watch?v=npoyc_X5zO8', '_blank')">
+                    <div class="module-icon">💎</div>
+                    <h3>Value Investing</h3>
+                    <p>Learn Warren Buffett's investment philosophy and how to identify undervalued stocks for long-term growth.</p>
+                    <span class="module-badge">Intermediate</span>
+                </div>
+
+                <!-- Module 7: Day Trading -->
+                <div class="learning-module" onclick="window.open('https://www.youtube.com/watch?v=3VUgOEi__KM', '_blank')">
+                    <div class="module-icon">⚡</div>
+                    <h3>Day Trading Strategies</h3>
+                    <p>Master short-term trading techniques, risk management, and psychological aspects of day trading.</p>
+                    <span class="module-badge">Advanced</span>
+                </div>
+
+                <!-- Module 8: Cryptocurrency Investing -->
+                <div class="learning-module" onclick="window.open('https://www.youtube.com/watch?v=VYWc9dFqROI', '_blank')">
+                    <div class="module-icon">₿</div>
+                    <h3>Cryptocurrency Investing</h3>
+                    <p>Understand blockchain technology, crypto markets, and how to invest in digital currencies safely.</p>
+                    <span class="module-badge">Intermediate</span>
+                </div>
+
+                <!-- Module 9: Risk Management -->
+                <div class="learning-module" onclick="window.open('https://www.youtube.com/watch?v=TJx0GCb1wWM', '_blank')">
+                    <div class="module-icon">🛡️</div>
+                    <h3>Risk Management</h3>
+                    <p>Learn essential risk management techniques to protect your capital and maximize returns.</p>
+                    <span class="module-badge">Essential</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+       
+         
+    </main>
+
+    <div class="ai-chatbot">
+        <div class="modal" id="chatbotModal" tabindex="-1" aria-modal="true" role="dialog">
+            <div class="modal__content">
+                <div class="modal__header">
+                    <div><b>AI Chat Assistant</b></div>
+                    <button class="modal__close" id="closeChatbot" aria-label="Close">×</button>
+                </div>
+                <div class="modal__body">
+                    <div id="chatMessages" class="chat-messages"></div>
+                    <div class="chat-input" style="display:flex;gap:10px;">
+                        <input id="chatInput" class="form-control" placeholder="Ask me anything financial...">
+                        <button id="sendChat" class="btn btn--primary">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="fab" id="chatbotFab" title="Open Assistant">🤖</button>
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
